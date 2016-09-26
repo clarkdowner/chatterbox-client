@@ -18,6 +18,15 @@ class App {
       type: 'GET'
     });
   }
+  clearMessages() {
+    $('#chats').empty();
+  }
+  renderMessage(message) {
+    $('#chats').append(`<p>${message.text}</p>`);
+  }
+  renderRoom(roomName) {
+    $('#roomSelect').append(`<option>${roomName}</option>`);
+  }
 }
 
 var app = new App('https://api.parse.com/1/classes/messages');
