@@ -26,8 +26,20 @@
   <body>
     <div id="main">
       <h1>chatterbox</h1>
-      <!-- Your HTML goes here! -->
+      <h3 class='userName'></h3>
+      <div class="spinner" ><img src="../client/images/spiffygif_46x46.gif"></div>
+      <div id="rooms">
+      Room:
+      <select id="roomSelect">
+        <option>space</option>
+        <option>Another_room</option>
+      </select>
+      <form action="#" id="send" method="post">
+        <input type="text" name="message" id="message"/>
+        <input type="submit" name="submit" class="submit"/>
+      </form>
+      </div>
+      <div id="chats"></div>
     </div>
-    <div id="chats"></div>
   </body>
 </html>
