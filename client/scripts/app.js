@@ -1,13 +1,16 @@
 class App {
   constructor(server) {
     this.server = server;
+    this.rooms = [];
+    this.roomsPopulated = false;
+    this.selectedRoom = '';
   }
   init() {
     this.fetch();
   }
   send(message) {
     $.ajax({
-      url: 'https://api.parse.com/1/classes/messages',
+      url: this.server,
       type: 'POST',
       data: JSON.stringify(message),
       contentType: 'application/json',
@@ -21,12 +24,31 @@ class App {
       }
     });
   }
+  
   fetch() {
     $.ajax({
       url: this.server,
       type: 'GET',
       success: (data) => {
-        data.results.forEach((message) => {
+        var messages = data.results;
+        messages = _.map(messages, (message) => {
+          return { 
+            username: escapeHtml(message.username),
+            text: escapeHtml(message.text),
+            roomname: escapeHtml(message.roomname)
+          };
+        });
+
+        // Refresh the room list
+        this.getRoomnames(messages);
+        // Refresh room drop down list (UI)
+        this.refreshRoomDropDownList();
+        // if a room is selected then filter by room name
+        if (this.selectedRoom.length > 0) {
+          // Filter by room name
+          messages = filterMessagesByRoomName(messages, this.selectedRoom);
+        }
+        messages.forEach((message) => {
           this.renderMessage(message);
         });
       },
@@ -35,24 +57,30 @@ class App {
       }
     });
   }
+  
   clearMessages() {
     $('#chats').empty();
   }
+
   renderMessage(message) {
-    $('#chats').append(`<div class='message'>
-                          <p class='username'>${escapeHtml(message.username)}</p>
-                          <p class='text'>${escapeHtml(message.text)}</p>
-                          <p class='roomname'>${escapeHtml(message.roomname)}</p></div>`);
+    $('#chats').append(`<div class='chat'>
+                          <div class='username'>${message.username}</div>
+                          <div class='text'>${message.text}</div>
+                          <div class='text'>${message.roomname}</div>
+                          </div>`);
     $('.username').on('click', () => {
       this.handleUsernameClick();
     });
   }
+
   renderRoom(roomName) {
     $('#roomSelect').append(`<option>${roomName}</option>`);
   }
+
   handleUsernameClick() {
 
   }
+
   handleSubmit() {
     var message = {
       username: getUserName(),
@@ -60,6 +88,27 @@ class App {
       roomname: getRoomName()
     };
     this.send(message);
+  }
+
+  getRoomnames(messages) {
+    _.each(messages, (message) => {
+      if (this.rooms.indexOf(message.roomname) === -1) {
+        this.rooms.unshift(message.roomname);
+      }
+    });
+  }
+
+  refreshRoomDropDownList() {
+    _.each(this.rooms, (room) => {
+      if (!this.roomsPopulated) {
+        $('#roomSelect').append(`<option value=${room}>${room}</option>`);
+      } else {
+        if (this.rooms.indexOf(room) === -1) {
+          $('#roomSelect').append(`<option value=${room}>${room}</option>`);
+        }
+      }
+    });
+    this.roomsPopulated = true;
   }
 }
 
@@ -69,6 +118,12 @@ $(document).ready(() => {
   $('#send').on('submit', () => {
     app.handleSubmit();
     return false;
+  });
+
+  $('#roomSelect').on('change', () => {
+    app.selectedRoom = $('#roomSelect').find('option:selected').val();
+    app.clearMessages();
+    app.fetch();
   });
 
   $('.userName').append('Welcome ' + getUserName());
@@ -88,6 +143,12 @@ var getRoomName = () => {
   return $('#roomSelect option:selected').text();
 };
 
+var filterMessagesByRoomName = (messages, roomName) => {
+  return _.filter(messages, (message) => {
+    return message.roomname === roomName;
+  });
+};
+
 // Sanitize the input string
 var escapeHtml = (str) => {
   var div = document.createElement('div');
@@ -95,7 +156,7 @@ var escapeHtml = (str) => {
   return div.innerHTML;
 };
 
-// Refresh message list view every 5000 ms
+//Refresh message list view every 5000 ms
 setInterval(() => {
   app.clearMessages();
   app.fetch();

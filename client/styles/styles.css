@@ -6,13 +6,13 @@ body {
 }
 
 #main, #chats {
-    width: 500px;
+    width: auto;
     margin: auto;
     text-align: left;
     background: white;
-    padding: 50px 60px;
+    padding: 30px 60px;
     border: solid #ddd;
-    border-width: 0 1px 1px 1px;
+    border-width: 1px 0 0 0;
 }
 
 #main h1 {
@@ -60,13 +60,23 @@ form input[type=text] {
 }
 
 .chat {
-    padding: 5px;
-    margin-bottom: 5px;
-    background-color: #eee;
+    padding: 8px;
+    margin-bottom: 12px;
+    background-color: white;
+    border-radius: 5px;
+    border: solid 1px grey;
+    padding-left: 12px;
 }
 
 .chat .username {
     font-weight: 800;
+}
+
+.chat .text {
+    padding-top: 10px;
+    padding-bottom: 10px
+    font-style: sans-serif;
+    font-color: grey;
 }
 
 .chat:hover {
