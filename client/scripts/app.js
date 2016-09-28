@@ -1,49 +1,57 @@
 class App {
-  constructor(server) {
-    this.server = server;
+  constructor() {
+    this.server = 'https://api.parse.com/1/classes/messages';
     this.rooms = [];
     this.roomsPopulated = false;
     this.selectedRoom = 'Lobby';
     this.defaultRoom = 'Lobby';
+
+    this.$roomSelect = $('#roomSelect');
+    this.$send = $('#send');
+    this.$message = $('#message');
+    this.$chats = $('#chats');
+    this.$refresh = $('#refresh');
+    this.$userName = $('.userName');
+    this.$spinner = $('.spinner');
   }
 
   init() {
-    // // setup all the even listeners
-    // $('#send').on('submit', (event) => {
-    //   setSpinner(true);
-    //   this.handleSubmit();
-    //   $('#message').val('');
-    //   return false;
-    // });
+    // setup all the even listeners
+    this.$send.on('submit', (event) => {
+      this.setSpinner(true);
+      this.handleSubmit();
+      this.$message.val('');
+      return false;
+    });
 
-    // $('#chats').on('click', '.username', (event) => {
-    //   this.handleUsernameClick(event);
-    // });
+    this.$chats.on('click', '.username', (event) => {
+      this.handleUsernameClick(event);
+    });
 
-    // $('#refresh').on('click', () => {
-    //   this.clearMessages();
-    //   this.fetch();
-    // });
+    this.$refresh.on('click', () => {
+      this.clearMessages();
+      this.fetch();
+    });
     
-    // $('#roomSelect').on('change', () => {
-    //   var roomSelected = $('#roomSelect').find('option:selected').val();
-    //   if ($('#roomSelect').prop('selectedIndex') === 0) {
-    //     // create a new room
-    //     var roomname = prompt('New Room');
-    //     if (roomname) {
-    //       // append it to the room list and select it
-    //       setNewRoom(roomname);
-    //     } else {
-    //       $('#roomSelect option[value="' + this.defaultRoom + '"]').attr('selected', 'selected');
-    //     }
-    //   } else {
-    //     this.selectedRoom = roomSelected;
-    //     this.clearMessages();
-    //     this.fetch();
-    //   }
-    // });
+    this.$roomSelect.on('change', () => {
+      var roomSelected = this.$roomSelect.find('option:selected').val();
+      if (this.$roomSelect.prop('selectedIndex') === 0) {
+        // create a new room
+        var roomname = prompt('New Room');
+        if (roomname) {
+          // append it to the room list and select it
+          this.setNewRoom(roomname);
+        } else {
+          $('#roomSelect option[value="' + this.defaultRoom + '"]').attr('selected', 'selected');
+        }
+      } else {
+        this.selectedRoom = roomSelected;
+        this.clearMessages();
+        this.fetch();
+      }
+    });
 
-    // $('.userName').append('Welcome ' + getUserName());
+    this.$userName.append('Welcome ' + this.getUserName());
     this.fetch();
   }
 
@@ -83,13 +91,13 @@ class App {
         this.refreshRoomDropDownList();
 
         if (this.selectedRoom.length > 0) {
-          messages = filterMessagesByRoomName(messages, this.selectedRoom);
+          messages = this.filterMessagesByRoomName(messages, this.selectedRoom);
         }
         this.clearMessages();
         messages.forEach((message) => {
           this.renderMessage(message);
         });
-        setSpinner(false);
+        this.setSpinner(false);
       },
       error: (data) => {
         console.error('chatterbox: Failed to fetch messages!', data);
@@ -98,11 +106,11 @@ class App {
   }
   
   clearMessages() {
-    $('#chats').empty();
+    this.$chats.empty();
   }
 
   renderMessage(message) {
-    $('#chats').append(`<div class='chat'>
+    this.$chats.append(`<div class='chat'>
                           <div class='username'>${message.username}</div>
                           <div class='text'>${message.text}</div>
                         </div>`);
@@ -112,7 +120,7 @@ class App {
   }
 
   renderRoom(roomName) {
-    $('#roomSelect').append(`<option>${roomName}</option>`);
+    this.$roomSelect.append(`<option>${roomName}</option>`);
   }
 
   handleUsernameClick(event) {
@@ -127,9 +135,9 @@ class App {
 
   handleSubmit() {
     var message = {
-      username: getUserName(),
-      text: getText(),
-      roomname: getRoomName()
+      username: this.getUserName(),
+      text: this.getText(),
+      roomname: this.getRoomName()
     };
     this.send(message);
   }
@@ -145,103 +153,62 @@ class App {
   refreshRoomDropDownList() {
     if ($('#roomSelect option[value="Create new room..."]').length === 0) {
       var $newRoom = $('<option value="Create new room...">Create new room...</option>');
-      $('#roomSelect').append($newRoom);
+      this.$roomSelect.append($newRoom);
     } 
 
     _.each(this.rooms, (room) => {
       if (!this.roomsPopulated) {
-        $('#roomSelect').append(`<option value="${room}">${room}</option>`);
+        this.$roomSelect.append(`<option value="${room}">${room}</option>`);
       } else {
         if (this.rooms.indexOf(room) === -1) {
-          $('#roomSelect').append(`<option value="${room}">${room}</option>`);
+          this.$roomSelect.append(`<option value="${room}">${room}</option>`);
         }
       }
     });
-    $('#roomSelect').val(this.selectedRoom);
+    this.$roomSelect.val(this.selectedRoom);
     this.roomsPopulated = true;
   }
-}
 
-var app = new App('https://api.parse.com/1/classes/messages');
-
-$(document).ready(() => {
-  $('#send').on('submit', (event) => {
-    setSpinner(true);
-    app.handleSubmit();
-    $('#message').val('');
-    return false;
-  });
-
-  $('#chats').on('click', '.username', (event) => {
-    app.handleUsernameClick(event);
-  });
-
-  $('#refresh').on('click', () => {
-    app.clearMessages();
-    app.fetch();
-  });
-    
-  $('#roomSelect').on('change', () => {
-    var roomSelected = $('#roomSelect').find('option:selected').val();
-    if ($('#roomSelect').prop('selectedIndex') === 0) {
-      // create a new room
-      var roomname = prompt('New Room');
-      if (roomname) {
-        // append it to the room list and select it
-        setNewRoom(roomname);
-      } else {
-        $('#roomSelect option[value="' + app.defaultRoom + '"]').attr('selected', 'selected');
-      }
+  setSpinner(turnOn) {
+    if (turnOn) {
+      this.$spinner.show();
     } else {
-      app.selectedRoom = roomSelected;
-      app.clearMessages();
-      app.fetch();
+      this.$spinner.hide();
     }
-  });
-
-  $('.userName').append('Welcome ' + getUserName());
-  app.init();
-});
-
-var getUserName = () => {
-  return window.location.search.slice(window.location.search.indexOf('=') + 1);
-};
-
-var getText = () => {
-  return $('#message').val();
-};
-
-var getRoomName = () => {
-  return $('#roomSelect option:selected').text();
-};
-
-var filterMessagesByRoomName = (messages, roomName) => {
-  return _.filter(messages, (message) => {
-    return message.roomname === roomName;
-  });
-};
-
-var setNewRoom = (newRoomName) => {
-  var result = _.find(app.rooms, (roomname) => {
-    return roomname === newRoomName;
-  });
-
-  if (!result) {
-    app.rooms.push(newRoomName);
-    $('#roomSelect').append(`<option value="${newRoomName}">${newRoomName}</option>`);
-    $('#roomSelect option[value="' + newRoomName + '"]').attr('selected', 'selected');
   }
-  app.selectedRoom = newRoomName;
-  app.fetch();
-};
 
-var setSpinner = (turnOn) => {
-  if (turnOn) {
-    $('.spinner').show();
-  } else {
-    $('.spinner').hide();
+  filterMessagesByRoomName(messages, roomName) {
+    return _.filter(messages, (message) => {
+      return message.roomname === roomName;
+    });
   }
-};
+
+  getUserName() {
+    return window.location.search.slice(window.location.search.indexOf('=') + 1);
+  }
+
+  getText() {
+    return this.$message.val();
+  }
+
+  getRoomName() {
+    return $('#roomSelect option:selected').text();
+  }
+
+  setNewRoom(newRoomName) {
+    var result = _.find(this.rooms, (roomname) => {
+      return roomname === newRoomName;
+    });
+
+    if (!result) {
+      this.rooms.push(newRoomName);
+      this.$roomSelect.append(`<option value="${newRoomName}">${newRoomName}</option>`);
+      $('#roomSelect option[value="' + newRoomName + '"]').attr('selected', 'selected');
+    }
+    this.selectedRoom = newRoomName;
+    this.fetch();
+  }
+}
 
 // Sanitize the input string
 var escapeHtml = (str) => {
