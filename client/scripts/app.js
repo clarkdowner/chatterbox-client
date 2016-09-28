@@ -3,10 +3,47 @@ class App {
     this.server = server;
     this.rooms = [];
     this.roomsPopulated = false;
-    this.selectedRoom = '';
+    this.selectedRoom = 'Lobby';
+    this.defaultRoom = 'Lobby';
   }
 
   init() {
+    // // setup all the even listeners
+    // $('#send').on('submit', (event) => {
+    //   setSpinner(true);
+    //   this.handleSubmit();
+    //   $('#message').val('');
+    //   return false;
+    // });
+
+    // $('#chats').on('click', '.username', (event) => {
+    //   this.handleUsernameClick(event);
+    // });
+
+    // $('#refresh').on('click', () => {
+    //   this.clearMessages();
+    //   this.fetch();
+    // });
+    
+    // $('#roomSelect').on('change', () => {
+    //   var roomSelected = $('#roomSelect').find('option:selected').val();
+    //   if ($('#roomSelect').prop('selectedIndex') === 0) {
+    //     // create a new room
+    //     var roomname = prompt('New Room');
+    //     if (roomname) {
+    //       // append it to the room list and select it
+    //       setNewRoom(roomname);
+    //     } else {
+    //       $('#roomSelect option[value="' + this.defaultRoom + '"]').attr('selected', 'selected');
+    //     }
+    //   } else {
+    //     this.selectedRoom = roomSelected;
+    //     this.clearMessages();
+    //     this.fetch();
+    //   }
+    // });
+
+    // $('.userName').append('Welcome ' + getUserName());
     this.fetch();
   }
 
@@ -106,15 +143,21 @@ class App {
   }
 
   refreshRoomDropDownList() {
+    if ($('#roomSelect option[value="Create new room..."]').length === 0) {
+      var $newRoom = $('<option value="Create new room...">Create new room...</option>');
+      $('#roomSelect').append($newRoom);
+    } 
+
     _.each(this.rooms, (room) => {
       if (!this.roomsPopulated) {
-        $('#roomSelect').append(`<option value=${room}>${room}</option>`);
+        $('#roomSelect').append(`<option value="${room}">${room}</option>`);
       } else {
         if (this.rooms.indexOf(room) === -1) {
-          $('#roomSelect').append(`<option value=${room}>${room}</option>`);
+          $('#roomSelect').append(`<option value="${room}">${room}</option>`);
         }
       }
     });
+    $('#roomSelect').val(this.selectedRoom);
     this.roomsPopulated = true;
   }
 }
@@ -123,8 +166,6 @@ var app = new App('https://api.parse.com/1/classes/messages');
 
 $(document).ready(() => {
   $('#send').on('submit', (event) => {
-    // clear the message text box
-    // turn on the icon
     setSpinner(true);
     app.handleSubmit();
     $('#message').val('');
@@ -139,15 +180,26 @@ $(document).ready(() => {
     app.clearMessages();
     app.fetch();
   });
-
+    
   $('#roomSelect').on('change', () => {
-    app.selectedRoom = $('#roomSelect').find('option:selected').val();
-    app.clearMessages();
-    app.fetch();
+    var roomSelected = $('#roomSelect').find('option:selected').val();
+    if ($('#roomSelect').prop('selectedIndex') === 0) {
+      // create a new room
+      var roomname = prompt('New Room');
+      if (roomname) {
+        // append it to the room list and select it
+        setNewRoom(roomname);
+      } else {
+        $('#roomSelect option[value="' + app.defaultRoom + '"]').attr('selected', 'selected');
+      }
+    } else {
+      app.selectedRoom = roomSelected;
+      app.clearMessages();
+      app.fetch();
+    }
   });
 
   $('.userName').append('Welcome ' + getUserName());
-  // Get the messages from a selected room name
   app.init();
 });
 
@@ -167,6 +219,20 @@ var filterMessagesByRoomName = (messages, roomName) => {
   return _.filter(messages, (message) => {
     return message.roomname === roomName;
   });
+};
+
+var setNewRoom = (newRoomName) => {
+  var result = _.find(app.rooms, (roomname) => {
+    return roomname === newRoomName;
+  });
+
+  if (!result) {
+    app.rooms.push(newRoomName);
+    $('#roomSelect').append(`<option value="${newRoomName}">${newRoomName}</option>`);
+    $('#roomSelect option[value="' + newRoomName + '"]').attr('selected', 'selected');
+  }
+  app.selectedRoom = newRoomName;
+  app.fetch();
 };
 
 var setSpinner = (turnOn) => {
