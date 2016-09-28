@@ -5,9 +5,11 @@ class App {
     this.roomsPopulated = false;
     this.selectedRoom = '';
   }
+
   init() {
     this.fetch();
   }
+
   send(message) {
     $.ajax({
       url: this.server,
@@ -29,6 +31,7 @@ class App {
     $.ajax({
       url: this.server,
       type: 'GET',
+      data: 'order=-createdAt',
       success: (data) => {
         var messages = data.results;
         messages = _.map(messages, (message) => {
@@ -39,18 +42,17 @@ class App {
           };
         });
 
-        // Refresh the room list
         this.getRoomnames(messages);
-        // Refresh room drop down list (UI)
         this.refreshRoomDropDownList();
-        // if a room is selected then filter by room name
+
         if (this.selectedRoom.length > 0) {
-          // Filter by room name
           messages = filterMessagesByRoomName(messages, this.selectedRoom);
         }
+        this.clearMessages();
         messages.forEach((message) => {
           this.renderMessage(message);
         });
+        setSpinner(false);
       },
       error: (data) => {
         console.error('chatterbox: Failed to fetch messages!', data);
@@ -66,10 +68,9 @@ class App {
     $('#chats').append(`<div class='chat'>
                           <div class='username'>${message.username}</div>
                           <div class='text'>${message.text}</div>
-                          <div class='text'>${message.roomname}</div>
-                          </div>`);
-    $('.username').on('click', () => {
-      this.handleUsernameClick();
+                        </div>`);
+    var elements = $('.chat .username').filter(function() {
+      return $(this).text() === message.username;
     });
   }
 
@@ -77,8 +78,14 @@ class App {
     $('#roomSelect').append(`<option>${roomName}</option>`);
   }
 
-  handleUsernameClick() {
+  handleUsernameClick(event) {
+    var username = $(event.target).html();
 
+    var friendElements = $('.chat .username').filter(function() {
+      return $(this).text() === username;
+    });
+
+    friendElements.parent().toggleClass('friend');
   }
 
   handleSubmit() {
@@ -115,9 +122,22 @@ class App {
 var app = new App('https://api.parse.com/1/classes/messages');
 
 $(document).ready(() => {
-  $('#send').on('submit', () => {
+  $('#send').on('submit', (event) => {
+    // clear the message text box
+    // turn on the icon
+    setSpinner(true);
     app.handleSubmit();
+    $('#message').val('');
     return false;
+  });
+
+  $('#chats').on('click', '.username', (event) => {
+    app.handleUsernameClick(event);
+  });
+
+  $('#refresh').on('click', () => {
+    app.clearMessages();
+    app.fetch();
   });
 
   $('#roomSelect').on('change', () => {
@@ -149,15 +169,17 @@ var filterMessagesByRoomName = (messages, roomName) => {
   });
 };
 
+var setSpinner = (turnOn) => {
+  if (turnOn) {
+    $('.spinner').show();
+  } else {
+    $('.spinner').hide();
+  }
+};
+
 // Sanitize the input string
 var escapeHtml = (str) => {
   var div = document.createElement('div');
   div.appendChild(document.createTextNode(str));
   return div.innerHTML;
 };
-
-//Refresh message list view every 5000 ms
-setInterval(() => {
-  app.clearMessages();
-  app.fetch();
-}, 5000);

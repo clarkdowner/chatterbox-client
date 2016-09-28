@@ -59,6 +59,11 @@ form input[type=text] {
     padding: 5px;
 }
 
+#refresh {
+    width: auto;
+    float: right;
+}
+
 .chat {
     padding: 8px;
     margin-bottom: 12px;
